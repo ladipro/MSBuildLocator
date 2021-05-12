@@ -58,6 +58,8 @@ namespace BuilderApp
                 Console.WriteLine("No Visual Studio instances found!");
             }
 
+            int first2019Index = -1;
+
             Console.WriteLine($"0) Custom path");
             for (var i = 1; i <= instances.Count; i++)
             {
@@ -70,11 +72,17 @@ namespace BuilderApp
                     recommended = " (Recommended!)";
 
                 Console.WriteLine($"{i}) {instance.Name} - {instance.Version}{recommended}");
+
+                // Auto select the first Dev16 installation.
+                if (first2019Index == -1 && instance.Version.Major == 16)
+                {
+                    first2019Index = i;
+                }
             }
 
             Console.WriteLine();
             Console.WriteLine("Select an instance of MSBuild: ");
-            var answer = Console.ReadLine();
+            var answer = first2019Index >= 0 ? first2019Index.ToString() : Console.ReadLine();
 
             if (int.TryParse(answer, out int instanceChoice) && instanceChoice >= 0 && instanceChoice <= instances.Count)
             {
