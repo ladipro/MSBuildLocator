@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
@@ -43,12 +44,24 @@ namespace BuilderApp
                 MSBuildLocator.RegisterMSBuildPath(msbuildDeploymentToUse.MSBuildPath);
             }
 
+            Repro(projectFilePath);
+
             var result = new Builder().Build(projectFilePath);
             Console.WriteLine();
 
             Console.ForegroundColor = result ? ConsoleColor.Green : ConsoleColor.Red;
             Console.WriteLine($"Build result: {result}");
             Console.ResetColor();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void Repro(string projectFilePath)
+        {
+            Project proj = new Project(projectFilePath);
+            while (true)
+            {
+                proj.Xml.Reload(false);
+            }
         }
 
         private static (VisualStudioInstance VSInstance, string MSBuildPath) AskWhichMSBuildToUse(List<VisualStudioInstance> instances)
