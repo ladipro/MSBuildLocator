@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Locator;
 
@@ -150,8 +151,34 @@ namespace BuilderApp
             Console.WriteLine();
 
             var pre = ProjectRootElement.Open(projectFile);
-            var project = new Project(pre);
-            return project.Build(new Logger());
+            var projectInstance = new ProjectInstance(pre);
+
+            BuildManager buildManager = new BuildManager();
+            buildManager.BeginBuild(new BuildParameters());
+            try
+            {
+                BuildRequestData requestData1 = new BuildRequestData(projectInstance, new string[] { "Build" });
+
+                // Comment out the following line to "fix" the buildResult.
+                buildManager.BuildRequest(requestData1);
+
+                BuildRequestData requestData2 = new BuildRequestData(
+                    projectInstance,
+                    new string[] { "Build" },
+                    null,
+                    BuildRequestDataFlags.ProvideProjectStateAfterBuild);
+
+                BuildResult buildResult = buildManager.BuildRequest(requestData2);
+
+                // ProjectStateAfterBuild is null despite requestData2 having been constructed
+                // with BuildRequestDataFlags.ProvideProjectStateAfterBuild.
+                return buildResult.ProjectStateAfterBuild != null;
+            }
+            finally
+            {
+                buildManager.EndBuild();
+            }
+
         }
 
         private class Logger : ILogger
